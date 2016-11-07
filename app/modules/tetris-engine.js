@@ -237,9 +237,9 @@ export default class TetrisEngine{
 		}
 	}
 
-	start(){
-		reset();
-		this.currentType = (Math.round(Math.random()*10)%7)+1;//范围1~7，代表七种方块
+	//获取下一个要出场的方块类型
+	getNextCubeType(){
+		return (Math.round(Math.random()*10)%7)+1;//范围1~7，代表七种方块
 		// 这七种方块分别是
 		// 1.
 		// X
@@ -264,23 +264,45 @@ export default class TetrisEngine{
 		// 7.
 		//   X
 		// X X X
+	}
 
-		this.prevTypeIndex = this.currentTypeIndex = getCubeTypeIndex(this.currentType);
-		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
-		this.prevPos = this.currentPos = {
+	//获取新出场的方块初始位置
+	getInitCubePos(){
+		return {
 			x:this.hSize/2-3,
 			y:0
 		};
-		//通知渲染层渲染初始游戏方块
+	}
+
+	start(){
+		reset();
+		this.currentType = getNextCubeType();//范围1~7，代表七种方块
+		this.nextType = getNextCubeType();//范围1~7，代表七种方块
+
+		this.prevTypeIndex = this.currentTypeIndex = getCubeTypeIndex(this.currentType);
+		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
+		this.prevPos = this.currentPos = getInitCubePos();
+		//通知渲染层渲染新生的游戏方块
 		cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 
 		autoDownMove();
 	}
 
 	autoDownMove(){
+		var self = this;
 		setTimeout(function(){
-			if(downMove()){
-				setTimeout(arguments.callee,this.currentInterval);
+			if(downMoveDeal()&&!fullRowDeal()){//方块下移成功并且不存在满行
+				setTimeout(arguments.callee,self.currentInterval);
+			}else{
+				this.currentType = this.nextType;
+				this.nextType = getNextCubeType();//范围1~7，代表七种方块
+				this.prevTypeIndex = this.currentTypeIndex = getCubeTypeIndex(this.currentType);
+				this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
+				this.prevPos = this.currentPos = getInitCubePos();
+				//通知渲染层渲染新生的游戏方块
+				cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+				//启动自动下移
+				setTimeout(arguments.callee,self.currentInterval);
 			}
 		},this.currentInterval);
 	}
@@ -406,8 +428,14 @@ export default class TetrisEngine{
 		}
 	}
 
-	//下移成功返回true，失败返回false
 	downMove(){
+		if(downMoveDeal()){
+			fullRowDeal();
+		}
+	}
+
+	//下移成功返回true，失败返回false
+	downMoveDeal(){
 		var pos = {
 			x:this.currentPos.x,
 			y:this.currentPos.y+1
@@ -426,7 +454,7 @@ export default class TetrisEngine{
 
 	//加速下移
 	accelerateDownMove(){
-		while(downMove()){
+		while(downMoveDeal()&&!fullRowDeal()){
 
 		}
 	}
