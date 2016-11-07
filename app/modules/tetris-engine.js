@@ -297,24 +297,131 @@ export default class TetrisEngine{
 
 	}
 
+	getRotateTypeIndex(typeIndex){
+		// 0-1
+		// 2
+		// 3-6
+		// 7-10
+		// 11-12
+		// 13-14
+		// 15-18
+		const rotateTypeIndexs = [1,0,
+									2,
+									4,5,6,3,
+									8,9,10,7,
+									12,11,
+									14,13,
+									16,17,18,15];
+		return rotateTypeIndexs[typeIndex];
+	}
+
+	//判断pos位置typeIndex类型的方块是否能放置到地图中
+	//typeIndex代表方块类型，范围0~18，对应this.cubes数组下标
+	//pos格式{x,y}，x代表方块所在的4*4矩形左上角横坐标，范围0~this.hSize-1，
+	//y代表方块所在的4*4矩形左上角纵坐标，范围0~this.vSize-1
+	//横坐标是从左到有右为正，纵坐标是从上到下为正
+	enablePlaceCube(typeIndex,pos){
+		var cube = this.cubes[typeIndex];
+		for(let i = 0;i<4;i++){
+			for(let j = 0;j<4;j++){
+				if(cube[i][j]){
+					//判断当前方块所处位置是否超出边界或已存在其它方块，是返回true
+					let x = pos.x+j,y = pos.y+i;
+					if(x<0||x>(this.hSize-1)||y<0||y>(this.vSize-1)||this.map[y][x]){
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	//将地图中typeIndex类型pos位置的方块所处位置全部重置为state的值
+	//typeIndex代表方块类型，范围0~18，对应this.cubes数组下标
+	//pos格式{x,y}，x代表方块所在的4*4矩形左上角横坐标，范围0~this.hSize-1，
+	//y代表方块所在的4*4矩形左上角纵坐标，范围0~this.vSize-1
+	//横坐标是从左到有右为正，纵坐标是从上到下为正
+	//state值为true或false，代表地图指定位置是否有方块存在
+	updateMapCubeState(typeIndex,pos,state){
+		for(let i = 0;i<4;i++){
+			for(let j = 0;j<4;j++){
+				if(cube[i][j]){
+					let x = pos.x+j,y = pos.y+i;
+					this.map[y][x] = state;
+				}
+			}
+		}
+	}
+
 	//旋转成功返回true，旋转失败返回false
 	rotate(){
-
+		var typeIndex = getRotateTypeIndex(this.currentTypeIndex);
+		if(enablePlaceCube(typeIndex,this.currentPos)){
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+			this.prevTypeIndex = this.currentTypeIndex;
+			this.currentTypeIndex = typeIndex;
+			this.prevCube = this.cubes[this.prevTypeIndex];
+			this.currentCube = this.cubes[this.currentTypeIndex];
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	//左移成功返回true，失败返回false
 	leftMove(){
-
+		var pos = {
+			x:this.currentPos.x-1,
+			y:this.currentPos.y
+		};
+		if(enablePlaceCube(this.currentTypeIndex,pos)){
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+			this.prevPos = this.currentPos;
+			this.currentPos = pos;
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	//右移成功返回true，失败返回false
 	rightMove(){
-
+		var pos = {
+			x:this.currentPos.x+1,
+			y:this.currentPos.y
+		};
+		if(enablePlaceCube(this.currentTypeIndex,pos)){
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+			this.prevPos = this.currentPos;
+			this.currentPos = pos;
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	//下移成功返回true，失败返回false
 	downMove(){
-
+		var pos = {
+			x:this.currentPos.x,
+			y:this.currentPos.y+1
+		};
+		if(enablePlaceCube(this.currentTypeIndex,pos)){
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+			this.prevPos = this.currentPos;
+			this.currentPos = pos;
+			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	//加速下移
