@@ -288,6 +288,11 @@ export default class TetrisEngine{
 		autoDownMove();
 	}
 
+	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回true，否则返回false
+	fullRowDeal(){
+
+	}
+
 	autoDownMove(){
 		var self = this;
 		setTimeout(function(){
