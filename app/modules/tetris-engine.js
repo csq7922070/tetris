@@ -283,14 +283,80 @@ export default class TetrisEngine{
 		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
 		this.prevPos = this.currentPos = getInitCubePos();
 		//通知渲染层渲染新生的游戏方块
-		cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+		this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 
 		autoDownMove();
 	}
 
+	//在方块下移后存在满行时参数callback代表的函数将被调用
+	onFullRow(callback){
+		this.fullRowCallback = callback;
+		// callback(startRow,endRow);
+		// startRow代表地图从上往下看第一个存在方块的行索引
+		// endRow代表地图所有满行中最靠近底部的行索引
+	}
+
 	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回true，否则返回false
 	fullRowDeal(){
+		var fullRowIndexs = [];//记录满行行索引，比如高度20行第17,18,20行满行则数组值为[16,17,19]
+		//遍历存在满行的行并将行索引保存到数组fullRowIndexs中
+		for(let i = this.vSize-1;i>=0;i--){
+			for(var j = 0;j<this.hSize;j++){
+				if(!this.map[i][j]){
+					break;
+				}
+			}
+			if(j===this.hSize){
+				fullRowIndexs.push(i);
+			}
+			if(fullRowIndexs.length===4){//每次方块下落后最多造成4行满行
+				break;
+			}
+		}
+		//将满行的行状态设置为false
+		for(let i = 0;i<fullRowIndexs.length;i++){
+			let rowIndex = fullRowIndexs[i];
+			for(let j = 0;j<this.hSize;j++){
+				this.map[rowIndex][j] = false;
+			}
+		}
+		var lastUpRow = 0;//记录有方块的最上面一行的行索引
+		//查找有方块的最上面一行的行索引
+		for(let i = 0;i<this.vSize;i++){
+			for(var j = 0;j<this.hSize;j++){
+				if(this.map[i][j]){
+					break;
+				}
+			}
+			if(j<this.hSize){
+				lastUpRow = i;
+			}
+		}
+		//消去满行后满行上方的方块需要做下移处理
+		if(fullRowIndexs.length>0){
+			let downSize = 1;
+			let index = 1;
+			for(let i = fullRowIndexs[0]-1;i>=lastUpRow;i--){
+				if(index<fullRowIndexs.length&&fullRowIndexs[index]===i){//当前行是满行
+					index++;
+					downSize++;
+					continue;
+				}
+				//对于不是满行的行做下移处理
+				for(let j = 0;j<this.hSize;j++){
+					this.map[i][j] = false;
+					this.map[i+downSize][j] = true;
+				}
+			}
+		}
 
+		if(fullRowIndexs.length>0){
+			//通知渲染层进行消行处理
+			this.fullRowCallback(lastUpRow, fullRowIndexs[0]);
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	autoDownMove(){
@@ -305,7 +371,7 @@ export default class TetrisEngine{
 				this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
 				this.prevPos = this.currentPos = getInitCubePos();
 				//通知渲染层渲染新生的游戏方块
-				cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+				this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 				//启动自动下移
 				setTimeout(arguments.callee,self.currentInterval);
 			}
@@ -390,7 +456,7 @@ export default class TetrisEngine{
 			this.prevCube = this.cubes[this.prevTypeIndex];
 			this.currentCube = this.cubes[this.currentTypeIndex];
 			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 			return true;
 		}else{
 			return false;
@@ -408,7 +474,7 @@ export default class TetrisEngine{
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
 			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 			return true;
 		}else{
 			return false;
@@ -426,7 +492,7 @@ export default class TetrisEngine{
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
 			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 			return true;
 		}else{
 			return false;
@@ -450,7 +516,7 @@ export default class TetrisEngine{
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
 			updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
 			return true;
 		}else{
 			return false;
