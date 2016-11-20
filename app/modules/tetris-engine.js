@@ -291,9 +291,10 @@ export default class TetrisEngine{
 	//在方块下移后存在满行时参数callback代表的函数将被调用
 	onFullRow(callback){
 		this.fullRowCallback = callback;
-		// callback(startRow,endRow);
+		// callback(startRow,endRow,map);
 		// startRow代表地图从上往下看第一个存在方块的行索引
 		// endRow代表地图所有满行中最靠近底部的行索引
+		// map代表地图，二维数组类型，值为true代表相应位置有方块，值为false代表没有
 	}
 
 	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回true，否则返回false
@@ -352,7 +353,7 @@ export default class TetrisEngine{
 
 		if(fullRowIndexs.length>0){
 			//通知渲染层进行消行处理
-			this.fullRowCallback(lastUpRow, fullRowIndexs[0]);
+			this.fullRowCallback(lastUpRow, fullRowIndexs[0], this.map);
 			return true;
 		}else{
 			return false;
