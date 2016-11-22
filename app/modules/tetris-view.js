@@ -15,13 +15,15 @@ export default class TetrisView{
 		this.cubeSize = param.cubeSize;
 		this.mapWidth = this.hSize*this.cubeSize;
 		this.mapHeight = this.vSize*this.cubeSize;
+		this.canvas.width = this.mapWidth;
+		this.canvas.height = this.mapHeight;
 		this.mapPos = {
 			x:param.x,
 			y:param.y
 		};
 		this.mapBackgroundColor = "#000";
 		this.cubeFillColor = "#f00";
-		redrawMap();
+		//redrawMap();
 	}
 
 	redrawMap(){
@@ -37,7 +39,7 @@ export default class TetrisView{
 		for(let i = startRow;i<=endRow;i++){
 			for(let j = 0;j<this.hSize;j++){
 				if(map[i][j]){
-					this.fillRect(this.mapPos.x+this.cubeSize*j,this.mapPos.y+this.cubeSize*i,this.cubeSize,this.cubeSize);
+					this.ctx.fillRect(this.mapPos.x+this.cubeSize*j,this.mapPos.y+this.cubeSize*i,this.cubeSize,this.cubeSize);
 				}
 			}
 		}
@@ -49,8 +51,8 @@ export default class TetrisView{
 	// ----------------------------------------------------
 	// prevCube和currentCube格式4*4的二维布尔数组，数组中值为true的元素代表方块
 	drawTransformCube(prevPos,prevCube,currentPos,currentCube){
-		drawCube(prevPos,prevCube,true);//用地图背景色绘制变换之前的方块
-		drawCube(currentPos,currentCube,false);//用方块填充色绘制变换之后的方块
+		this.drawCube(prevPos,prevCube,true);//用地图背景色绘制变换之前的方块
+		this.drawCube(currentPos,currentCube,false);//用方块填充色绘制变换之后的方块
 	}
 
 	//pos格式{x,y}，cube格式4*4的二维布尔数组，数组中值为true的元素代表方块，clear为true代表用地图背景色绘制方块，否则用方块填充色绘制方块
@@ -65,7 +67,7 @@ export default class TetrisView{
 						fillColor = this.cubeFillColor;
 					}
 					this.ctx.fillStyle = this.fillColor;
-					this.fillRect(this.mapPos.x+this.cubeSize*(pos.x+j),this.mapPos.y+this.cubeSize*(pos.y+i),this.cubeSize,this.cubeSize);
+					this.ctx.fillRect(this.mapPos.x+this.cubeSize*(pos.x+j),this.mapPos.y+this.cubeSize*(pos.y+i),this.cubeSize,this.cubeSize);
 				}
 			}
 		}
