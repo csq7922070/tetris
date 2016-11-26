@@ -475,7 +475,9 @@ export default class TetrisEngine{
 			this.prevCube = this.cubes[this.prevTypeIndex];
 			this.currentCube = this.cubes[this.currentTypeIndex];
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.currentPos,this.prevCube,this.currentPos,this.currentCube);
+			this.prevTypeIndex = this.currentTypeIndex;
+			this.prevCube = this.currentCube;
 			return true;
 		}else{
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
