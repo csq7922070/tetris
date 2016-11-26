@@ -22,7 +22,7 @@ export default class TetrisView{
 			y:param.y
 		};
 		this.mapBackgroundColor = "#000";
-		this.cubeFillColor = "#f00";
+		this.cubeFillColors = ["#f00","#0f0","#00f","#ff0","#ff0080","#0ff","#8000ff"];
 		//redrawMap();
 	}
 
@@ -35,7 +35,7 @@ export default class TetrisView{
 	redrawPart(startRow,endRow,map){
 		this.ctx.fillStyle = this.mapBackgroundColor;
 		this.ctx.fillRect(this.mapPos.x,this.mapPos.y+startRow*this.cubeSize,this.mapWidth,this.mapPos.y+endRow*this.cubeSize);
-		this.ctx.fillStyle = this.cubeFillColor;
+		this.ctx.fillStyle = this.cubeFillColors[0];
 		for(let i = startRow;i<=endRow;i++){
 			for(let j = 0;j<this.hSize;j++){
 				if(map[i][j]){
@@ -50,13 +50,16 @@ export default class TetrisView{
 	// 横坐标是从左到有右为正，纵坐标是从上到下为正
 	// ----------------------------------------------------
 	// prevCube和currentCube格式4*4的二维布尔数组，数组中值为true的元素代表方块
-	drawTransformCube(prevPos,prevCube,currentPos,currentCube){
-		this.drawCube(prevPos,prevCube,true);//用地图背景色绘制变换之前的方块
-		this.drawCube(currentPos,currentCube,false);//用方块填充色绘制变换之后的方块
+	// -----------------------------------------------------
+	// currentType代表当前方块的类型，范围是1~7
+	drawTransformCube(prevPos,prevCube,currentPos,currentCube,currentType){
+		var cubeFillColor = this.cubeFillColors[currentType-1];
+		this.drawCube(prevPos,prevCube,true,cubeFillColor);//用地图背景色绘制变换之前的方块
+		this.drawCube(currentPos,currentCube,false,cubeFillColor);//用方块填充色绘制变换之后的方块
 	}
 
 	//pos格式{x,y}，cube格式4*4的二维布尔数组，数组中值为true的元素代表方块，clear为true代表用地图背景色绘制方块，否则用方块填充色绘制方块
-	drawCube(pos,cube,clear){
+	drawCube(pos,cube,clear,cubeFillColor){
 		var vSize = cube.length;
 		var hSize = cube[0].length;
 		for(let i = 0;i<vSize;i++){
@@ -64,7 +67,7 @@ export default class TetrisView{
 				if(cube[i][j]){
 					var fillColor = this.mapBackgroundColor;
 					if(!clear){
-						fillColor = this.cubeFillColor;
+						fillColor = cubeFillColor;
 					}
 					this.ctx.fillStyle = fillColor;
 					this.ctx.fillRect(this.mapPos.x+this.cubeSize*(pos.x+j),this.mapPos.y+this.cubeSize*(pos.y+i),this.cubeSize,this.cubeSize);

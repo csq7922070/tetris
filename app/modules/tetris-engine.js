@@ -383,10 +383,15 @@ export default class TetrisEngine{
 				self.prevTypeIndex = self.currentTypeIndex = self.getCubeTypeIndex(self.currentType);
 				self.prevCube = self.currentCube = self.cubes[self.currentTypeIndex];
 				self.prevPos = self.currentPos = self.getInitCubePos();
-				//通知渲染层渲染新生的游戏方块
-				self.cubeTransformCallback(self.prevPos,self.prevCube,self.currentPos,self.currentCube);
-				//启动自动下移
-				self.autoDownMoveTimer = setTimeout(f,self.currentInterval);
+				if(self.enablePlaceCube(self.currentTypeIndex,self.currentPos)){//新生的方块可以放置
+					//通知渲染层渲染新生的游戏方块
+					self.cubeTransformCallback(self.prevPos,self.prevCube,self.currentPos,self.currentCube);
+					//启动自动下移
+					self.autoDownMoveTimer = setTimeout(f,self.currentInterval);
+				}else{//游戏结束
+					self.pause();
+					alert("游戏结束");
+				}
 			}
 		};
 		this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
@@ -475,7 +480,7 @@ export default class TetrisEngine{
 			this.prevCube = this.cubes[this.prevTypeIndex];
 			this.currentCube = this.cubes[this.currentTypeIndex];
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			this.cubeTransformCallback(this.currentPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.currentPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			this.prevTypeIndex = this.currentTypeIndex;
 			this.prevCube = this.currentCube;
 			return true;
@@ -496,7 +501,7 @@ export default class TetrisEngine{
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			return true;
 		}else{
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
@@ -515,7 +520,7 @@ export default class TetrisEngine{
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			return true;
 		}else{
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
@@ -540,7 +545,7 @@ export default class TetrisEngine{
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
-			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			return true;
 		}else{
 			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
@@ -558,11 +563,13 @@ export default class TetrisEngine{
 	//在方块左移、右移、下移、旋转时参数callback代表的回调函数将被调用
 	onCubeTransform(callback){
 		this.cubeTransformCallback = callback;
-		// callback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+		// callback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 		// this.prevPos和this.currentPos格式{x,y}，x代表方块所在的4*4矩形左上角横坐标，范围0~this.hSize-1，
 		// y代表方块所在的4*4矩形左上角纵坐标，范围0~this.vSize-1
 		// 横坐标是从左到有右为正，纵坐标是从上到下为正
 		// ----------------------------------------------------
 		// this.prevCube和this.currentCube格式4*4的二维布尔数组，数组中值为true的元素代表方块
+		// -----------------------------------------------------
+		// this.currentType代表当前方块的类型，范围是1~7
 	}
 }
