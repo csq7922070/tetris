@@ -66,7 +66,7 @@ export default class TetrisView{
 					if(!clear){
 						fillColor = this.cubeFillColor;
 					}
-					this.ctx.fillStyle = this.fillColor;
+					this.ctx.fillStyle = fillColor;
 					this.ctx.fillRect(this.mapPos.x+this.cubeSize*(pos.x+j),this.mapPos.y+this.cubeSize*(pos.y+i),this.cubeSize,this.cubeSize);
 				}
 			}

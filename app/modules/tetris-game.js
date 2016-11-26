@@ -7,7 +7,9 @@ export default React.createClass({
 		return {
 			canvas:null,
 			tetrisView:null,
-			tetrisEngine:null
+			tetrisEngine:null,
+			startMenuText:'开始',
+			pauseMenuText:'暂停'
 		};
 	},
 	componentDidMount(){
@@ -35,10 +37,46 @@ export default React.createClass({
 	},
 	start(){
 		this.state.tetrisEngine.start();
+		this.setState({startMenuText:'重新开始',pauseMenuText:'暂停'});
+	},
+	pause(){
+		var tetrisEngine = this.state.tetrisEngine;
+		var gameStatus = tetrisEngine.getGameStatus();
+		if(gameStatus==='run'){//游戏运行中，需要暂停
+			tetrisEngine.pause();
+			this.setState({pauseMenuText:'继续'});
+		}else if(gameStatus==='pause'){//游戏暂停中，需要继续运行
+			tetrisEngine.continue();
+			this.setState({pauseMenuText:'暂停'});
+		}
+	},
+	stop(){
+		this.state.tetrisEngine.stop();
+		this.setState({startMenuText:'开始',pauseMenuText:'暂停'});
+	},
+	leftMove(){
+		this.state.tetrisEngine.leftMove();
+	},
+	rightMove(){
+		this.state.tetrisEngine.rightMove();
+	},
+	rotate(){
+		this.state.tetrisEngine.rotate();
+	},
+	accelerateDownMove(){
+		this.state.tetrisEngine.accelerateDownMove();
 	},
 	render(){
 		return (<div>
-			<button onClick={this.start}>开始</button>
+			<button onClick={this.start}>{this.state.startMenuText}</button>
+			<button onClick={this.pause}>{this.state.pauseMenuText}</button>
+			<button onClick={this.stop}>停止</button>
+			<br/>
+			<button onClick={this.leftMove}>左移</button>
+			<button onClick={this.rightMove}>右移</button>
+			<button onClick={this.rotate}>旋转</button>
+			<button onClick={this.accelerateDownMove}>加速下移</button>
+			<br/>
 			<canvas id="gameCanvas"></canvas>
 		</div>);
 	}
