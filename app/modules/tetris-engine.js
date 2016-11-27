@@ -204,6 +204,7 @@ export default class TetrisEngine{
 		];
 
 		this.gameStatus = "stop";//'stop','run','pause'
+		this.accelerateInterval = 50;//加速下移时方块下移时间间隔为50ms
 	}
 
 	//返回游戏状态，共3种情况：未运行，运行中，暂停中
@@ -288,89 +289,28 @@ export default class TetrisEngine{
 			clearTimeout(this.autoDownMoveTimer);
 		}
 		this.reset();
-		this.currentType = this.getNextCubeType();//范围1~7，代表七种方块
-		this.nextType = this.getNextCubeType();//范围1~7，代表七种方块
-
-		this.prevTypeIndex = this.currentTypeIndex = this.getCubeTypeIndex(this.currentType);
-		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
-		this.prevPos = this.currentPos = this.getInitCubePos();
-		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
-		//通知渲染层渲染新生的游戏方块
-		this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
+		this.makeNextCube();
 
 		this.autoDownMove();
 		this.gameStatus = 'run';
 	}
 
-	//在方块下移后存在满行时参数callback代表的函数将被调用
-	onFullRow(callback){
-		this.fullRowCallback = callback;
-		// callback(startRow,endRow,map);
-		// startRow代表地图从上往下看第一个存在方块的行索引
-		// endRow代表地图所有满行中最靠近底部的行索引
-		// map代表地图，二维数组类型，值为true代表相应位置有方块，值为false代表没有
-	}
-
-	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回true，否则返回false
-	fullRowDeal(){
-		var fullRowIndexs = [];//记录满行行索引，比如高度20行第17,18,20行满行则数组值为[16,17,19]
-		//遍历存在满行的行并将行索引保存到数组fullRowIndexs中
-		for(let i = this.vSize-1;i>=0;i--){
-			for(var j = 0;j<this.hSize;j++){
-				if(!this.map[i][j].exist){
-					break;
-				}
-			}
-			if(j===this.hSize){
-				fullRowIndexs.push(i);
-			}
-			if(fullRowIndexs.length===4){//每次方块下落后最多造成4行满行
-				break;
-			}
+	// 当前方块重置为下一个方块，然后生成下一个方块
+	// 如果当前方块重置为下一个方块后无法放置则返回false，否则返回true
+	makeNextCube(){
+		if(this.nextType>=1&&this.nextType<=7){//下一个方块存在，则将当前方块类型重置为下一个方块类型，然后在生成下一个方块类型
+			this.currentType = this.nextType;
+		}else{
+			this.currentType = this.getNextCubeType();//范围1~7，代表七种方块
 		}
-		//将满行的行状态设置为false
-		for(let i = 0;i<fullRowIndexs.length;i++){
-			let rowIndex = fullRowIndexs[i];
-			for(let j = 0;j<this.hSize;j++){
-				this.map[rowIndex][j] = {exist:false,type:0};
-			}
-		}
-		var lastUpRow = 0;//记录有方块的最上面一行的行索引
-		//查找有方块的最上面一行的行索引
-		for(let i = 0;i<this.vSize;i++){
-			for(var j = 0;j<this.hSize;j++){
-				if(this.map[i][j].exist){
-					break;
-				}
-			}
-			if(j<this.hSize){
-				lastUpRow = i;
-				break;
-			}
-		}
-		//消去满行后满行上方的方块需要做下移处理
-		if(fullRowIndexs.length>0){
-			let downSize = 1;
-			let index = 1;
-			for(let i = fullRowIndexs[0]-1;i>=lastUpRow;i--){
-				if(index<fullRowIndexs.length&&fullRowIndexs[index]===i){//当前行是满行
-					index++;
-					downSize++;
-					continue;
-				}
-				//对于不是满行的行做下移处理
-				for(let j = 0;j<this.hSize;j++){
-					if(this.map[i][j].exist){
-						this.map[i+downSize][j] = {exist:true,type:this.map[i][j].type};
-						this.map[i][j] = {exist:false,type:0};
-					}
-				}
-			}
-		}
-
-		if(fullRowIndexs.length>0){
-			//通知渲染层进行消行处理
-			this.fullRowCallback(lastUpRow, fullRowIndexs[0], this.map);
+		this.nextType = this.getNextCubeType();//范围1~7，代表七种方块
+		this.prevTypeIndex = this.currentTypeIndex = this.getCubeTypeIndex(this.currentType);
+		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
+		this.prevPos = this.currentPos = this.getInitCubePos();
+		if(this.enablePlaceCube(this.currentTypeIndex,this.currentPos)){//新生的方块可以放置
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
+			//通知渲染层渲染新生的游戏方块
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);				
 			return true;
 		}else{
 			return false;
@@ -378,23 +318,16 @@ export default class TetrisEngine{
 	}
 
 	autoDownMove(){
-		var self = this;
 		var f = function(){
-			if(this.downMoveDeal()&&!this.fullRowDeal()){//方块下移成功并且不存在满行
+			if(this.downMove()){//方块下移成功
 				this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
-			}else{
-				this.currentType = this.nextType;
-				this.nextType = this.getNextCubeType();//范围1~7，代表七种方块
-				this.prevTypeIndex = this.currentTypeIndex = this.getCubeTypeIndex(this.currentType);
-				this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
-				this.prevPos = this.currentPos = this.getInitCubePos();
-				if(this.enablePlaceCube(this.currentTypeIndex,this.currentPos)){//新生的方块可以放置
-					this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
-					//通知渲染层渲染新生的游戏方块
-					this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
+			}else{//方块无法下移后先检查是否有满行，有进行满行处理
+				this.currentInterval = this.intervalBackup;//恢复正常的方块下移时间间隔
+				this.fullRowDeal();//检查是否存在满行，存在则进行满行处理
+				if(this.makeNextCube()){//成功生成下一个方块
 					//启动自动下移
 					this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
-				}else{//游戏结束
+				}else{//下一个方块生成失败，说明新生方块已无处可放，游戏结束
 					this.pause();
 					alert("游戏结束");
 				}
@@ -540,14 +473,8 @@ export default class TetrisEngine{
 		}
 	}
 
-	downMove(){
-		if(this.downMoveDeal()){
-			this.fullRowDeal();
-		}
-	}
-
 	//下移成功返回true，失败返回false
-	downMoveDeal(){
+	downMove(){
 		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x,
@@ -567,17 +494,10 @@ export default class TetrisEngine{
 
 	//加速下移
 	accelerateDownMove(){
-		if(this.autoDownMoveTimer){
-			clearTimeout(this.autoDownMoveTimer);
-		}
-		var f = function(){
-			if(this.downMoveDeal()&&!this.fullRowDeal()){
-				setTimeout(f,100);
-			}else{
-				this.autoDownMove();
-			}
-		}.bind(this);
-		setTimeout(f,0);
+		if(this.currentInterval>this.accelerateInterval){
+			this.intervalBackup = this.currentInterval;
+			this.currentInterval = this.accelerateInterval;
+		}	
 	}
 
 	//在方块左移、右移、下移、旋转时参数callback代表的回调函数将被调用
@@ -591,5 +511,80 @@ export default class TetrisEngine{
 		// this.prevCube和this.currentCube格式4*4的二维布尔数组，数组中值为true的元素代表方块
 		// -----------------------------------------------------
 		// this.currentType代表当前方块的类型，范围是1~7
+	}
+
+	//在方块下移后存在满行时参数callback代表的函数将被调用
+	onFullRow(callback){
+		this.fullRowCallback = callback;
+		// callback(startRow,endRow,map);
+		// startRow代表地图从上往下看第一个存在方块的行索引
+		// endRow代表地图所有满行中最靠近底部的行索引
+		// map代表地图，二维数组类型，值为true代表相应位置有方块，值为false代表没有
+	}
+
+	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回true，否则返回false
+	fullRowDeal(){
+		var fullRowIndexs = [];//记录满行行索引，比如高度20行第17,18,20行满行则数组值为[16,17,19]
+		//遍历存在满行的行并将行索引保存到数组fullRowIndexs中
+		for(let i = this.vSize-1;i>=0;i--){
+			for(var j = 0;j<this.hSize;j++){
+				if(!this.map[i][j].exist){
+					break;
+				}
+			}
+			if(j===this.hSize){
+				fullRowIndexs.push(i);
+			}
+			if(fullRowIndexs.length===4){//每次方块下落后最多造成4行满行
+				break;
+			}
+		}
+		//将满行的行状态设置为false
+		for(let i = 0;i<fullRowIndexs.length;i++){
+			let rowIndex = fullRowIndexs[i];
+			for(let j = 0;j<this.hSize;j++){
+				this.map[rowIndex][j] = {exist:false,type:0};
+			}
+		}
+		var lastUpRow = 0;//记录有方块的最上面一行的行索引
+		//查找有方块的最上面一行的行索引
+		for(let i = 0;i<this.vSize;i++){
+			for(var j = 0;j<this.hSize;j++){
+				if(this.map[i][j].exist){
+					break;
+				}
+			}
+			if(j<this.hSize){
+				lastUpRow = i;
+				break;
+			}
+		}
+		//消去满行后满行上方的方块需要做下移处理
+		if(fullRowIndexs.length>0){
+			let downSize = 1;
+			let index = 1;
+			for(let i = fullRowIndexs[0]-1;i>=lastUpRow;i--){
+				if(index<fullRowIndexs.length&&fullRowIndexs[index]===i){//当前行是满行
+					index++;
+					downSize++;
+					continue;
+				}
+				//对于不是满行的行做下移处理
+				for(let j = 0;j<this.hSize;j++){
+					if(this.map[i][j].exist){
+						this.map[i+downSize][j] = {exist:true,type:this.map[i][j].type};
+						this.map[i][j] = {exist:false,type:0};
+					}
+				}
+			}
+		}
+
+		if(fullRowIndexs.length>0){
+			//通知渲染层进行消行处理
+			this.fullRowCallback(lastUpRow, fullRowIndexs[0], this.map);
+			return true;
+		}else{
+			return false;
+		}
 	}
 }
