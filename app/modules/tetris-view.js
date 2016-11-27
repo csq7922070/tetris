@@ -35,10 +35,10 @@ export default class TetrisView{
 	redrawPart(startRow,endRow,map){
 		this.ctx.fillStyle = this.mapBackgroundColor;
 		this.ctx.fillRect(this.mapPos.x,this.mapPos.y+startRow*this.cubeSize,this.mapWidth,this.mapPos.y+endRow*this.cubeSize);
-		this.ctx.fillStyle = this.cubeFillColors[0];
 		for(let i = startRow;i<=endRow;i++){
 			for(let j = 0;j<this.hSize;j++){
-				if(map[i][j]){
+				if(map[i][j].exist){
+					this.ctx.fillStyle = this.cubeFillColors[map[i][j].type-1];
 					this.ctx.fillRect(this.mapPos.x+this.cubeSize*j,this.mapPos.y+this.cubeSize*i,this.cubeSize,this.cubeSize);
 				}
 			}

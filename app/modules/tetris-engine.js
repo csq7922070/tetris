@@ -14,7 +14,8 @@ export default class TetrisEngine{
 		for(let i = 0;i<this.vSize;i++){
 			let hArray = new Array(this.hSize);
 			for(let j = 0;j<this.hSize;j++){
-				hArray[j] = false;
+				//exist代表对应位置是否存在方块，是为true，反之为false，type代表对应位置方块的类型，范围1~7，不存在方块则为0
+				hArray[j] = {exist:false,type:0};
 			}
 			this.map.push(hArray);
 		}
@@ -219,7 +220,7 @@ export default class TetrisEngine{
 	reset(){
 		for(let i = 0;i<this.vSize;i++){
 			for(let j = 0;j<this.hSize;j++){
-				this.map[i][j] = false;
+				this.map[i][j] = {exist:false,type:0};
 			}
 		}
 		this.resetCallback();
@@ -293,8 +294,9 @@ export default class TetrisEngine{
 		this.prevTypeIndex = this.currentTypeIndex = this.getCubeTypeIndex(this.currentType);
 		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
 		this.prevPos = this.currentPos = this.getInitCubePos();
+		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 		//通知渲染层渲染新生的游戏方块
-		this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube);
+		this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 
 		this.autoDownMove();
 		this.gameStatus = 'run';
@@ -315,7 +317,7 @@ export default class TetrisEngine{
 		//遍历存在满行的行并将行索引保存到数组fullRowIndexs中
 		for(let i = this.vSize-1;i>=0;i--){
 			for(var j = 0;j<this.hSize;j++){
-				if(!this.map[i][j]){
+				if(!this.map[i][j].exist){
 					break;
 				}
 			}
@@ -330,19 +332,20 @@ export default class TetrisEngine{
 		for(let i = 0;i<fullRowIndexs.length;i++){
 			let rowIndex = fullRowIndexs[i];
 			for(let j = 0;j<this.hSize;j++){
-				this.map[rowIndex][j] = false;
+				this.map[rowIndex][j] = {exist:false,type:0};
 			}
 		}
 		var lastUpRow = 0;//记录有方块的最上面一行的行索引
 		//查找有方块的最上面一行的行索引
 		for(let i = 0;i<this.vSize;i++){
 			for(var j = 0;j<this.hSize;j++){
-				if(this.map[i][j]){
+				if(this.map[i][j].exist){
 					break;
 				}
 			}
 			if(j<this.hSize){
 				lastUpRow = i;
+				break;
 			}
 		}
 		//消去满行后满行上方的方块需要做下移处理
@@ -357,8 +360,10 @@ export default class TetrisEngine{
 				}
 				//对于不是满行的行做下移处理
 				for(let j = 0;j<this.hSize;j++){
-					this.map[i][j] = false;
-					this.map[i+downSize][j] = true;
+					if(this.map[i][j].exist){
+						this.map[i+downSize][j] = {exist:true,type:this.map[i][j].type};
+						this.map[i][j] = {exist:false,type:0};
+					}
 				}
 			}
 		}
@@ -375,25 +380,26 @@ export default class TetrisEngine{
 	autoDownMove(){
 		var self = this;
 		var f = function(){
-			if(self.downMoveDeal()&&!self.fullRowDeal()){//方块下移成功并且不存在满行
-				self.autoDownMoveTimer = setTimeout(f,self.currentInterval);
+			if(this.downMoveDeal()&&!this.fullRowDeal()){//方块下移成功并且不存在满行
+				this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
 			}else{
-				self.currentType = self.nextType;
-				self.nextType = self.getNextCubeType();//范围1~7，代表七种方块
-				self.prevTypeIndex = self.currentTypeIndex = self.getCubeTypeIndex(self.currentType);
-				self.prevCube = self.currentCube = self.cubes[self.currentTypeIndex];
-				self.prevPos = self.currentPos = self.getInitCubePos();
-				if(self.enablePlaceCube(self.currentTypeIndex,self.currentPos)){//新生的方块可以放置
+				this.currentType = this.nextType;
+				this.nextType = this.getNextCubeType();//范围1~7，代表七种方块
+				this.prevTypeIndex = this.currentTypeIndex = this.getCubeTypeIndex(this.currentType);
+				this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
+				this.prevPos = this.currentPos = this.getInitCubePos();
+				if(this.enablePlaceCube(this.currentTypeIndex,this.currentPos)){//新生的方块可以放置
+					this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 					//通知渲染层渲染新生的游戏方块
-					self.cubeTransformCallback(self.prevPos,self.prevCube,self.currentPos,self.currentCube);
+					this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 					//启动自动下移
-					self.autoDownMoveTimer = setTimeout(f,self.currentInterval);
+					this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
 				}else{//游戏结束
-					self.pause();
+					this.pause();
 					alert("游戏结束");
 				}
 			}
-		};
+		}.bind(this);
 		this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
 	}
 
@@ -443,7 +449,7 @@ export default class TetrisEngine{
 				if(cube[i][j]){
 					//判断当前方块所处位置是否超出边界或已存在其它方块，是返回true
 					let x = pos.x+j,y = pos.y+i;
-					if(x<0||x>(this.hSize-1)||y<0||y>(this.vSize-1)||this.map[y][x]){
+					if(x<0||x>(this.hSize-1)||y<0||y>(this.vSize-1)||this.map[y][x].exist){
 						return false;
 					}
 				}
@@ -453,18 +459,24 @@ export default class TetrisEngine{
 	}
 
 	//将地图中typeIndex类型pos位置的方块所处位置全部重置为state的值
-	//typeIndex代表方块类型，范围0~18，对应this.cubes数组下标
+	//type代表方块类型，范围1~7
+	//typeIndex代表方块类型索引，范围0~18，对应this.cubes数组下标
 	//pos格式{x,y}，x代表方块所在的4*4矩形左上角横坐标，范围0~this.hSize-1，
 	//y代表方块所在的4*4矩形左上角纵坐标，范围0~this.vSize-1
 	//横坐标是从左到有右为正，纵坐标是从上到下为正
 	//state值为true或false，代表地图指定位置是否有方块存在
-	updateMapCubeState(typeIndex,pos,state){
+	updateMapCubeState(type,typeIndex,pos,state){
 		var cube = this.cubes[typeIndex];
 		for(let i = 0;i<4;i++){
 			for(let j = 0;j<4;j++){
 				if(cube[i][j]){
 					let x = pos.x+j,y = pos.y+i;
-					this.map[y][x] = state;
+					this.map[y][x].exist = state;
+					if(state){
+						this.map[y][x].type = type;
+					}else{
+						this.map[y][x].type = 0;
+					}
 				}
 			}
 		}
@@ -472,27 +484,27 @@ export default class TetrisEngine{
 
 	//旋转成功返回true，旋转失败返回false
 	rotate(){
-		this.updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var typeIndex = this.getRotateTypeIndex(this.currentTypeIndex);
 		if(this.enablePlaceCube(typeIndex,this.currentPos)){
 			this.prevTypeIndex = this.currentTypeIndex;
 			this.currentTypeIndex = typeIndex;
 			this.prevCube = this.cubes[this.prevTypeIndex];
 			this.currentCube = this.cubes[this.currentTypeIndex];
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			this.cubeTransformCallback(this.currentPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			this.prevTypeIndex = this.currentTypeIndex;
 			this.prevCube = this.currentCube;
 			return true;
 		}else{
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			return false;
 		}
 	}
 
 	//左移成功返回true，失败返回false
 	leftMove(){
-		this.updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x-1,
 			y:this.currentPos.y
@@ -500,18 +512,18 @@ export default class TetrisEngine{
 		if(this.enablePlaceCube(this.currentTypeIndex,pos)){
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			return true;
 		}else{
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			return false;
 		}
 	}
 
 	//右移成功返回true，失败返回false
 	rightMove(){
-		this.updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x+1,
 			y:this.currentPos.y
@@ -519,11 +531,11 @@ export default class TetrisEngine{
 		if(this.enablePlaceCube(this.currentTypeIndex,pos)){
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			return true;
 		}else{
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			return false;
 		}
 	}
@@ -536,7 +548,7 @@ export default class TetrisEngine{
 
 	//下移成功返回true，失败返回false
 	downMoveDeal(){
-		this.updateMapCubeState(this.currentTypeIndex,this.currentPos,false);
+		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x,
 			y:this.currentPos.y+1
@@ -544,20 +556,28 @@ export default class TetrisEngine{
 		if(this.enablePlaceCube(this.currentTypeIndex,pos)){
 			this.prevPos = this.currentPos;
 			this.currentPos = pos;
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
 			return true;
 		}else{
-			this.updateMapCubeState(this.currentTypeIndex,this.currentPos,true);
+			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			return false;
 		}
 	}
 
 	//加速下移
 	accelerateDownMove(){
-		while(this.downMoveDeal()&&!this.fullRowDeal()){
-
+		if(this.autoDownMoveTimer){
+			clearTimeout(this.autoDownMoveTimer);
 		}
+		var f = function(){
+			if(this.downMoveDeal()&&!this.fullRowDeal()){
+				setTimeout(f,100);
+			}else{
+				this.autoDownMove();
+			}
+		}.bind(this);
+		setTimeout(f,0);
 	}
 
 	//在方块左移、右移、下移、旋转时参数callback代表的回调函数将被调用
