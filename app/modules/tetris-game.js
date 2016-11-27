@@ -5,6 +5,7 @@ import TetrisEngine from './tetris-engine'
 export default React.createClass({
 	getInitialState(){
 		return {
+			id:'game-canvas-'+(new Date()).getTime(),
 			canvas:null,
 			tetrisView:null,
 			tetrisEngine:null,
@@ -13,19 +14,20 @@ export default React.createClass({
 		};
 	},
 	componentDidMount(){
-		var canvas = this.state.canvas = document.getElementById("gameCanvas");
+		var canvas = this.state.canvas = document.getElementById(this.state.id);
+		var hSize = 15,vSize = 20;
 		var tetrisView = this.state.tetrisView = new TetrisView({
 			canvas:canvas,
-			hSize:10,
-			vSize:15,
+			hSize:hSize,
+			vSize:vSize,
 			cubeSize:20,
 			x:0,
 			y:0
 		});
 		tetrisView.redrawMap();
 		var tetrisEngine = this.state.tetrisEngine = new TetrisEngine({
-			hSize:10,
-			vSize:15,
+			hSize:hSize,
+			vSize:vSize,
 			interval:1000
 		});
 		var redrawMap = tetrisView.redrawMap.bind(tetrisView);
@@ -67,7 +69,7 @@ export default React.createClass({
 		this.state.tetrisEngine.accelerateDownMove();
 	},
 	render(){
-		return (<div>
+		return (<div className="tetris-game">
 			<button onClick={this.start}>{this.state.startMenuText}</button>
 			<button onClick={this.pause}>{this.state.pauseMenuText}</button>
 			<button onClick={this.stop}>停止</button>
@@ -77,7 +79,7 @@ export default React.createClass({
 			<button onClick={this.rotate}>旋转</button>
 			<button onClick={this.accelerateDownMove}>加速下移</button>
 			<br/>
-			<canvas id="gameCanvas"></canvas>
+			<canvas id={this.state.id}></canvas>
 		</div>);
 	}
 });

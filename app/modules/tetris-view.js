@@ -21,9 +21,10 @@ export default class TetrisView{
 			x:param.x,
 			y:param.y
 		};
-		this.mapBackgroundColor = "#000";
-		this.cubeFillColors = ["#f00","#0f0","#00f","#ff0","#ff0080","#0ff","#8000ff"];
-		//redrawMap();
+		this.mapBackgroundColor = "#000";//地图背景色
+		this.cubeFillColors = ["#f00","#0f0","#00f","#ff0","#ff0080","#0ff","#8000ff"];//方块填充色，共7种类型
+		this.cubeLineWidth = 1;
+		this.cubeStrokeStyle = "#333";
 	}
 
 	redrawMap(){
@@ -35,11 +36,16 @@ export default class TetrisView{
 	redrawPart(startRow,endRow,map){
 		this.ctx.fillStyle = this.mapBackgroundColor;
 		this.ctx.fillRect(this.mapPos.x,this.mapPos.y+startRow*this.cubeSize,this.mapWidth,this.mapPos.y+endRow*this.cubeSize);
+		this.ctx.strokeStyle = this.cubeStrokeStyle;
+		this.ctx.lineWidth = this.cubeLineWidth;
 		for(let i = startRow;i<=endRow;i++){
 			for(let j = 0;j<this.hSize;j++){
 				if(map[i][j].exist){
 					this.ctx.fillStyle = this.cubeFillColors[map[i][j].type-1];
-					this.ctx.fillRect(this.mapPos.x+this.cubeSize*j,this.mapPos.y+this.cubeSize*i,this.cubeSize,this.cubeSize);
+					this.ctx.fillRect(this.mapPos.x+this.cubeSize*j,this.mapPos.y+this.cubeSize*i,
+						this.cubeSize,this.cubeSize);
+					this.ctx.strokeRect(this.mapPos.x+this.cubeSize*j+1,this.mapPos.y+this.cubeSize*i+1,
+						this.cubeSize-2,this.cubeSize-2);
 				}
 			}
 		}
@@ -62,6 +68,8 @@ export default class TetrisView{
 	drawCube(pos,cube,clear,cubeFillColor){
 		var vSize = cube.length;
 		var hSize = cube[0].length;
+		this.ctx.strokeStyle = this.cubeStrokeStyle;
+		this.ctx.lineWidth = this.cubeLineWidth;
 		for(let i = 0;i<vSize;i++){
 			for(let j = 0;j<hSize;j++){
 				if(cube[i][j]){
@@ -70,7 +78,12 @@ export default class TetrisView{
 						fillColor = cubeFillColor;
 					}
 					this.ctx.fillStyle = fillColor;
-					this.ctx.fillRect(this.mapPos.x+this.cubeSize*(pos.x+j),this.mapPos.y+this.cubeSize*(pos.y+i),this.cubeSize,this.cubeSize);
+					this.ctx.fillRect(this.mapPos.x+this.cubeSize*(pos.x+j),this.mapPos.y+this.cubeSize*(pos.y+i),
+						this.cubeSize,this.cubeSize);
+					if(!clear){
+						this.ctx.strokeRect(this.mapPos.x+this.cubeSize*(pos.x+j)+1,this.mapPos.y+this.cubeSize*(pos.y+i)+1,
+							this.cubeSize-2,this.cubeSize-2);
+					}
 				}
 			}
 		}

@@ -279,7 +279,7 @@ export default class TetrisEngine{
 	//获取新出场的方块初始位置
 	getInitCubePos(){
 		return {
-			x:this.hSize/2-3,
+			x:Math.round(this.hSize/2)-3,
 			y:0
 		};
 	}
@@ -322,7 +322,9 @@ export default class TetrisEngine{
 			if(this.downMove()){//方块下移成功
 				this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
 			}else{//方块无法下移后先检查是否有满行，有进行满行处理
-				this.currentInterval = this.intervalBackup;//恢复正常的方块下移时间间隔
+				if(this.currentInterval===this.accelerateInterval){
+					this.currentInterval = this.intervalBackup;//恢复正常的方块下移时间间隔
+				}
 				this.fullRowDeal();//检查是否存在满行，存在则进行满行处理
 				if(this.makeNextCube()){//成功生成下一个方块
 					//启动自动下移

@@ -13,7 +13,7 @@ window.apiPath = "http://localhost:3000/api";
 render((
 	<Router history={hashHistory}>
 		<Route path="/" component={App}>
-			<IndexRoute component={TetrisGame}/>
+			<IndexRoute component={Home}/>
 			<Route path="comment-box/:id" component={CommentBox}/>
 			<Route path="about" component={About}/>
 			<Route path="repos" component={Repos}/>
