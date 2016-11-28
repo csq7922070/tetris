@@ -1,0 +1,22 @@
+{
+  "name": "tetris",
+  "description": "tetris",
+  "main": "app/index.js",
+  "authors": [
+    "csq"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "tetris"
+  ],
+  "homepage": "https://github.com/csq7922070/tetris",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
