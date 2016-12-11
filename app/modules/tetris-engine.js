@@ -204,7 +204,18 @@ export default class TetrisEngine{
 		];
 
 		this.gameStatus = "stop";//'stop','run','pause'
+		this.score = 0;//初始游戏得分为0
 		this.accelerateInterval = 50;//加速下移时方块下移时间间隔为50ms
+	}
+
+	//获取消行时得分，消行越多得分越多
+	getFullRowScore(rowCount){
+		var scores = [100,300,600,1000];
+		if(rowCount>=1&&rowCount<=4){
+			return scores[rowCount-1];
+		}else{
+			return 0;
+		}
 	}
 
 	//返回游戏状态，共3种情况：未运行，运行中，暂停中
@@ -317,6 +328,12 @@ export default class TetrisEngine{
 		}
 	}
 
+	//注册游戏得分变化时的回调函数，该回调函数有个参数，代表最新的游戏得分
+	onScoreChange(callback){
+		this.scoreChangeCallback = callback;
+		// callback(this.score);
+	}
+
 	autoDownMove(){
 		var f = function(){
 			if(this.downMove()){//方块下移成功
@@ -325,7 +342,13 @@ export default class TetrisEngine{
 				if(this.currentInterval===this.accelerateInterval){
 					this.currentInterval = this.intervalBackup;//恢复正常的方块下移时间间隔
 				}
-				this.fullRowDeal();//检查是否存在满行，存在则进行满行处理
+				var rowCount = this.fullRowDeal();//检查是否存在满行，存在则进行满行处理并返回实际满行数量（范围1~4），不存在满行则返回0
+				if(rowCount>0){
+					//更新游戏分数
+					this.score += this.getFullRowScore(rowCount);
+					this.scoreChangeCallback(this.score);
+				}
+
 				if(this.makeNextCube()){//成功生成下一个方块
 					//启动自动下移
 					this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
@@ -545,7 +568,7 @@ export default class TetrisEngine{
 		// map代表地图，二维数组类型，值为true代表相应位置有方块，值为false代表没有
 	}
 
-	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回true，否则返回false
+	//判断当前游戏地图中的方块是否存在满行现象，存在消去满行部分，返回实际满行数量（范围1~4），不存在满行返回0
 	fullRowDeal(){
 		var fullRowIndexs = [];//记录满行行索引，比如高度20行第17,18,20行满行则数组值为[16,17,19]
 		//遍历存在满行的行并将行索引保存到数组fullRowIndexs中
@@ -604,10 +627,8 @@ export default class TetrisEngine{
 
 		if(fullRowIndexs.length>0){
 			//通知渲染层进行消行处理
-			this.fullRowCallback(lastUpRow, fullRowIndexs[0], this.map);
-			return true;
-		}else{
-			return false;
+			this.fullRowCallback(lastUpRow, fullRowIndexs[0], this.map);			
 		}
+		return fullRowIndexs.length;
 	}
 }
