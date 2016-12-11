@@ -205,7 +205,9 @@ export default class TetrisEngine{
 
 		this.gameStatus = "stop";//'stop','run','pause'
 		this.score = 0;//初始游戏得分为0
+		this.accelerate = false;//是否处于加速下移状态，初始为false
 		this.accelerateInterval = 50;//加速下移时方块下移时间间隔为50ms
+		this.maxAccelerateCount = 5;//通过加速下移最大次数，超过该次数时方块下移速度将恢复正常下移速度
 	}
 
 	//获取消行时得分，消行越多得分越多
@@ -230,12 +232,19 @@ export default class TetrisEngine{
 	}
 
 	reset(){
+		//重置游戏地图数据
 		for(let i = 0;i<this.vSize;i++){
 			for(let j = 0;j<this.hSize;j++){
 				this.map[i][j] = {exist:false,type:0};
 			}
 		}
+		//通知渲染层重绘游戏地图
 		this.resetCallback();
+		// //重新生成下一个游戏方块
+		// this.nextType = this.getNextCubeType();//范围1~7，代表七种方块
+		// this.nextCube = this.cubes[this.getCubeTypeIndex(this.nextType)];
+		// //通知渲染层重绘下一个游戏方块
+		// this.nextCubeChangeCallback(this.nextCube, this.nextType);
 	}
 
 	//根据方块类别type（范围1~7）获取其在this.cubes中对应的数组下标（范围0~18）
@@ -295,6 +304,12 @@ export default class TetrisEngine{
 		};
 	}
 
+	//注册在下一个游戏方块生成时将被调用的回调函数
+	onNextCubeChange(callback){
+		this.nextCubeChangeCallback = callback;
+		//callback(this.nextCube,this.nextType);
+	}
+
 	start(){
 		if(this.autoDownMoveTimer){
 			clearTimeout(this.autoDownMoveTimer);
@@ -317,11 +332,14 @@ export default class TetrisEngine{
 		this.nextType = this.getNextCubeType();//范围1~7，代表七种方块
 		this.prevTypeIndex = this.currentTypeIndex = this.getCubeTypeIndex(this.currentType);
 		this.prevCube = this.currentCube = this.cubes[this.currentTypeIndex];
+		this.nextCube = this.cubes[this.getCubeTypeIndex(this.nextType)];
 		this.prevPos = this.currentPos = this.getInitCubePos();
 		if(this.enablePlaceCube(this.currentTypeIndex,this.currentPos)){//新生的方块可以放置
 			this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,true);
 			//通知渲染层渲染新生的游戏方块
-			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);				
+			this.cubeTransformCallback(this.prevPos,this.prevCube,this.currentPos,this.currentCube,this.currentType);
+			//通知渲染层渲染下一个游戏方块
+			this.nextCubeChangeCallback(this.nextCube,this.nextType);				
 			return true;
 		}else{
 			return false;
@@ -334,18 +352,33 @@ export default class TetrisEngine{
 		// callback(this.score);
 	}
 
+	//开启自动下移模式，自动下移会以固定时间间隔下移方块，如果下移过程方块无法下移则进行消行处理并生成下一个方块进行新的方块自动下移处理
+	//如果新的方块无法放置到地图中则提示游戏结束
 	autoDownMove(){
 		var f = function(){
 			if(this.downMove()){//方块下移成功
+				//判断是否处于加速下移状态，是更新加速下移次数，超过最大加速下移次数后切换为正常下移状态
+				if(this.accelerate){
+					this.accelerateCount++;
+					if(this.accelerateCount===this.maxAccelerateCount){
+						this.currentInterval = this.intervalBackup;//恢复正常的方块下移时间间隔
+						this.accelerate = false;
+					}
+				}
+				//启动自动下移
 				this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
 			}else{//方块无法下移后先检查是否有满行，有进行满行处理
-				if(this.currentInterval===this.accelerateInterval){
+				//判断是否处于加速下移状态，是切换回正常下移状态
+				if(this.accelerate){
 					this.currentInterval = this.intervalBackup;//恢复正常的方块下移时间间隔
+					this.accelerate = false;
 				}
-				var rowCount = this.fullRowDeal();//检查是否存在满行，存在则进行满行处理并返回实际满行数量（范围1~4），不存在满行则返回0
+				//检查是否存在满行，存在则进行满行处理并返回实际满行数量（范围1~4），不存在满行则返回0
+				var rowCount = this.fullRowDeal();
 				if(rowCount>0){
 					//更新游戏分数
 					this.score += this.getFullRowScore(rowCount);
+					//通知渲染层重绘游戏分数
 					this.scoreChangeCallback(this.score);
 				}
 
@@ -358,6 +391,7 @@ export default class TetrisEngine{
 				}
 			}
 		}.bind(this);
+		//启动自动下移
 		this.autoDownMoveTimer = setTimeout(f,this.currentInterval);
 	}
 
@@ -536,11 +570,15 @@ export default class TetrisEngine{
 	}
 
 	//加速下移
+	//加速下移是通过修改方块自动下移时间间隔实现的，在自动下移函数里面会进行边界检查
+	//即加速自动下移次数超过最大加速下移次数或者自动下移过程方块触底了则将方块下移速度切换回正常下移速度
 	accelerateDownMove(){
 		if(this.gameStatus!=='run'){
 			return;
 		}
 		if(this.currentInterval>this.accelerateInterval){
+			this.accelerate = true;
+			this.accelerateCount = 0;
 			this.intervalBackup = this.currentInterval;
 			this.currentInterval = this.accelerateInterval;
 		}	

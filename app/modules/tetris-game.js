@@ -4,9 +4,10 @@ import TetrisEngine from './tetris-engine'
 
 export default React.createClass({
 	getInitialState(){
+		var id = (new Date()).getTime();
 		return {
-			id:'game-canvas-'+(new Date()).getTime(),
-			canvas:null,
+			mainId:'game-main-canvas-' + id,
+			nextId:'game-next-canvas-' + id,
 			tetrisView:null,
 			tetrisEngine:null,
 			score:0,
@@ -15,10 +16,12 @@ export default React.createClass({
 		};
 	},
 	componentDidMount(){
-		var canvas = this.state.canvas = document.getElementById(this.state.id);
+		var mainCanvas = document.getElementById(this.state.mainId);
+		var nextCanvas = document.getElementById(this.state.nextId);
 		var hSize = 15,vSize = 20;
 		var tetrisView = this.state.tetrisView = new TetrisView({
-			canvas:canvas,
+			mainCanvas:mainCanvas,
+			nextCanvas:nextCanvas,
 			hSize:hSize,
 			vSize:vSize,
 			cubeSize:20,
@@ -26,6 +29,7 @@ export default React.createClass({
 			y:0
 		});
 		tetrisView.redrawMap();
+		tetrisView.redrawNextBackground();
 		var tetrisEngine = this.state.tetrisEngine = new TetrisEngine({
 			hSize:hSize,
 			vSize:vSize,
@@ -40,6 +44,8 @@ export default React.createClass({
 		}.bind(this));
 		var drawTransformCube = tetrisView.drawTransformCube.bind(tetrisView);
 		tetrisEngine.onCubeTransform(drawTransformCube);
+		var drawNextCube = tetrisView.drawNextCube.bind(tetrisView);
+		tetrisEngine.onNextCubeChange(drawNextCube);
 	},
 	start(){
 		this.state.tetrisEngine.start();
@@ -87,7 +93,12 @@ export default React.createClass({
 					<button onClick={this.accelerateDownMove}>加速下移</button>
 				</div>
 			</div>
-			<canvas id={this.state.id}></canvas>
+			<div className='canvas-container'>
+				<canvas id={this.state.mainId}></canvas>
+			</div>
+			<div className='canvas-container next-canvas-container'>
+				<canvas id={this.state.nextId}></canvas>
+			</div>
 			<div>
 				<label>游戏得分：</label><span>{this.state.score}</span>
 			</div>
