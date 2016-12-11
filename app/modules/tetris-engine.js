@@ -339,19 +339,25 @@ export default class TetrisEngine{
 	}
 
 	pause(){
-		clearTimeout(this.autoDownMoveTimer);
-		this.gameStatus = 'pause';
+		if(this.gameStatus==='run'){
+			clearTimeout(this.autoDownMoveTimer);
+			this.gameStatus = 'pause';
+		}
 	}
 
 	continue(){
-		this.autoDownMove();
-		this.gameStatus = 'run';
+		if(this.gameStatus==='pause'){
+			this.autoDownMove();
+			this.gameStatus = 'run';
+		}
 	}
 
 	stop(){
-		clearTimeout(this.autoDownMoveTimer);
-		this.reset();
-		this.gameStatus = 'stop';
+		if(this.gameStatus!=='stop'){
+			clearTimeout(this.autoDownMoveTimer);
+			this.reset();
+			this.gameStatus = 'stop';
+		}
 	}
 
 	getRotateTypeIndex(typeIndex){
@@ -419,6 +425,9 @@ export default class TetrisEngine{
 
 	//旋转成功返回true，旋转失败返回false
 	rotate(){
+		if(this.gameStatus!=='run'){
+			return;
+		}
 		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var typeIndex = this.getRotateTypeIndex(this.currentTypeIndex);
 		if(this.enablePlaceCube(typeIndex,this.currentPos)){
@@ -439,6 +448,9 @@ export default class TetrisEngine{
 
 	//左移成功返回true，失败返回false
 	leftMove(){
+		if(this.gameStatus!=='run'){
+			return;
+		}
 		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x-1,
@@ -458,6 +470,9 @@ export default class TetrisEngine{
 
 	//右移成功返回true，失败返回false
 	rightMove(){
+		if(this.gameStatus!=='run'){
+			return;
+		}
 		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x+1,
@@ -477,6 +492,9 @@ export default class TetrisEngine{
 
 	//下移成功返回true，失败返回false
 	downMove(){
+		if(this.gameStatus!=='run'){
+			return;
+		}
 		this.updateMapCubeState(this.currentType,this.currentTypeIndex,this.currentPos,false);
 		var pos = {
 			x:this.currentPos.x,
@@ -496,6 +514,9 @@ export default class TetrisEngine{
 
 	//加速下移
 	accelerateDownMove(){
+		if(this.gameStatus!=='run'){
+			return;
+		}
 		if(this.currentInterval>this.accelerateInterval){
 			this.intervalBackup = this.currentInterval;
 			this.currentInterval = this.accelerateInterval;
