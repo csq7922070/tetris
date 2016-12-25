@@ -1,13 +1,13 @@
 {
-  "name": "rice-server",
+  "name": "tetris-server",
   "version": "1.0.0",
-  "description": "rice server",
+  "description": "tetris server",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "rice-server"
+    "tetris-server"
   ],
   "author": "csq",
   "license": "ISC",

@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/csq7922070/tetris#readme",
   "dependencies": {
+    "jquery": "^3.1.1",
     "react": "^15.3.1",
     "react-dom": "^15.3.1",
     "react-router": "^2.8.1"

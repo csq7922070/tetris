@@ -1,6 +1,7 @@
 import React from 'react'
 import CommentList from './comment-list'
 import CommentForm from './comment-form'
+import $ from 'jquery'
 
 export default React.createClass({
   loadCommentsFromServer: function() {
