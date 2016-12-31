@@ -1,8 +1,8 @@
 {
-  "name": "tetris",
+  "name": "tetris-frontend",
   "version": "1.0.0",
-  "description": "tetris",
-  "main": "app/index.js",
+  "description": "tetris frontend",
+  "main": "src/app.js",
   "scripts": {
     "start": "webpack-dev-server --inline --content-base .",
     "test": "echo \"Error: no test specified\" && exit 1"
