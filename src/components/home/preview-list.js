@@ -1,13 +1,13 @@
-import React, {PropTypes, Component} from 'react';
+import React, {Component} from 'react';
 import Preview from './preview';
 
 class PreviewList extends Component{
-	static propTypes = {
-		loading: PropTypes.bool,
-		error: PropTypes.bool,
-		articleList: PropTypes.arrayOf(PropTypes.object),
-		loadArticles: PropTypes.func
-	};
+	// static propTypes = {
+	// 	loading: React.PropTypes.bool,
+	// 	error: React.PropTypes.bool,
+	// 	articleList: React.PropTypes.arrayOf(React.PropTypes.object),
+	// 	loadArticles: React.PropTypes.func
+	// };
 
 	componentDidMount(){
 		this.props.loadArticles();

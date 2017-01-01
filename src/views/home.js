@@ -7,8 +7,10 @@ import {listActions} from './home-redux';
 class Home extends Component{
 	render(){
 		return (
-			<h1>Home</h1>
-			<PreviewList {...this.props.list} {...this.props.listActions} />
+			<div>
+				<h1>Home</h1>
+				<PreviewList {...this.props.list} {...this.props.listActions}></PreviewList>
+			</div>
 		);
 	}
 }
@@ -19,6 +21,6 @@ export default connect(state => {
 	};
 }, dispatch => {
 	return {
-		listActions: bindActionCreators(listActions, dispatch);
+		listActions: bindActionCreators(listActions, dispatch)
 	};
 })(Home);
