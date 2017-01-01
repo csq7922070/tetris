@@ -3,6 +3,8 @@ var path = require('path');
 module.exports = {
   entry: './src/app.js',
 
+  devtool: 'sourcemap',
+
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
@@ -13,7 +15,7 @@ module.exports = {
     loaders: [{ 
         test: /\.js$/, 
         include: path.join(__dirname, 'src'),
-        loader: 'babel-loader?presets[]=es2015&presets[]=react' 
+        loader: 'babel' 
     }]
   }
 }
