@@ -6,4 +6,5 @@ export default combineReducers({
 	list
 });
 
-export * as listAction from '../components/home/preview-list-redux';
+import * as listAction from '../components/home/preview-list-redux';
+export {listAction};

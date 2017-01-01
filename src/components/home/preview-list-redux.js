@@ -19,7 +19,7 @@ function previewList(state = initialState, action){
 	switch(action.type){
 		case LOAD_ARTICLES: {
 			return {
-				...state,
+				state,
 				loading: true,
 				error: false
 			};
@@ -27,7 +27,7 @@ function previewList(state = initialState, action){
 
 		case LOAD_ARTICLES_SUCCESS: {
 			return {
-				...state,
+				state,
 				loading: false,
 				error: false,
 				articleList: action.payload.articleList
@@ -36,7 +36,7 @@ function previewList(state = initialState, action){
 
 		case LOAD_ARTICLES_ERROR: {
 			return {
-				...state,
+				state,
 				loading: false,
 				error: true
 			};

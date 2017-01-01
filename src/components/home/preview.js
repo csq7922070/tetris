@@ -2,10 +2,10 @@ import React, {Component} from 'react';
 import './preview.css';
 
 class Preview extends Component{
-	static propTypes = {
-		title: React.PropTypes.string,
-		link: React.PropTypes.string
-	};
+	// static propTypes = {
+	// 	title: React.PropTypes.string,
+	// 	link: React.PropTypes.string
+	// };
 
 	render(){
 		return (
