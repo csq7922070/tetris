@@ -1,26 +1,27 @@
 import React, {Component} from 'react';
-import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import PreviewList from '../components/home/preview-list';
-import {listActions} from './home-redux';
+import {actions} from './home-redux';
+import {push} from 'react-router-redux';
 
+@connect(state => {
+	return {
+		articleList: state.home.list.articleList
+	};
+}, {
+	push,
+	...actions
+})
 class Home extends Component{
+	const {loadArticles, articleList, push} = this.props;
 	render(){
 		return (
 			<div>
 				<h1>Home</h1>
-				<PreviewList {...this.props.list} {...this.props.listActions}></PreviewList>
+				<PreviewList {...this.props}></PreviewList>
 			</div>
 		);
 	}
 }
 
-export default connect(state => {
-	return {
-		list: state.home.list
-	};
-}, dispatch => {
-	return {
-		listActions: bindActionCreators(listActions, dispatch)
-	};
-})(Home);
+export default Home;
