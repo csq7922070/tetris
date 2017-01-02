@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import './preview.css';
+//import './preview.css';
 
 class Preview extends Component{
 	static propTypes = {
