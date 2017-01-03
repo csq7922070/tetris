@@ -1,0 +1,13 @@
+.tetris-game{
+	display: inline-block;
+	margin-left:10px;
+}
+
+.canvas-container{
+    display: inline-block;
+}
+
+.next-canvas-container{
+    vertical-align: top;
+    margin-left: 10px;
+}

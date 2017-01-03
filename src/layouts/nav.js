@@ -7,6 +7,7 @@ class Nav extends Component{
 			<nav>
 				<Link to="/">Home</Link>
 				<Link to="/detail/1">Detail</Link>
+				<Link to="/tetris">Tetris</Link>
 			</nav>
 		);
 	}
